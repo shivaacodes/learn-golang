@@ -16,7 +16,7 @@ func sum(s []int, c chan int) { // here, c is a channel which take int datatype
 }
 
 // 5 ref types : slices, maps, funcs, channels, pointers
-func main() {
+func test_channel() {
 	s := []int{3, 4, 6, -8, 9, 2}
 
 	c := make(chan int) // ref types can be declared with a make syntax

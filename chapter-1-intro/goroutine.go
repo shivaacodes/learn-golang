@@ -12,7 +12,7 @@ func say(s string) {
 	}
 }
 
-func main() {
+func test_goroutines() {
 	go say("world") //goroutine: concurrency
 	say("hello")
 }
