@@ -25,11 +25,25 @@ func loadImage(paths []string) []Job {
 	return jobs
 }
 
-func resize(jobs *[]Job) {
-	// for each input job change the image in the job struct
-	for index := range *jobs {
-		(*jobs)[index].Image = imageprocessing.Resize((*jobs)[index].Image)
+func resize(jobs *[]Job) <-chan Job {
+	out := make(chan Job, len(*jobs))
+	for _, job := range *jobs { // loop over jobs
+		go func(job Job) { // create goroutines for each job
+			job.Image = imageprocessing.Resize(job.Image) // in each goroutine, we resize the images into job.Image
+			out <- job                                    // now place this job on channel out
+		}(job) // pass job in the goroutine
 	}
+	return out
+}
+
+// fan in logic to collect the jobs back from teh channel
+func collectJobs(input <-chan Job, imageCnt int) []Job {
+	var resizedJobs []Job
+	for i := 0; i < imageCnt; i++ {
+		job := <-input
+		resizedJobs = append(resizedJobs, job)
+	}
+	return resizedJobs
 }
 
 func saveImages(jobs *[]Job) {
@@ -47,6 +61,9 @@ func main() {
 	}
 
 	jobs := loadImage(imagePaths)
-	resize(&jobs)
-	saveImages(&jobs)
+	// Fan out this function to multiple goroutines
+	out := resize(&jobs)
+	// Collect / fan-in
+	resizedJobs := collectJobs(out, len(imagePaths))
+	saveImages(&resizedJobs)
 }
